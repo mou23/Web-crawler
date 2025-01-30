@@ -24,14 +24,12 @@ def extract_next_links(url, resp):
     current_time = datetime.now().timestamp()
     links = []
     if (resp.status== 200):
-        print(url)
         store_content(url, resp.raw_response.content, current_time)
         soup = BeautifulSoup(resp.raw_response.content, "html.parser")
         for a_tag in soup.find_all("a", href=True):
             absolute_url = urljoin(url, a_tag["href"])
             url_without_fragment, _ = urldefrag(absolute_url)
             links.append(url_without_fragment)
-            print(url_without_fragment, is_valid(url_without_fragment))
     
     return list()
 
@@ -84,4 +82,3 @@ def store_content(url, content, current_time):
 
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
-    print(f"Saved content to {filename}")
