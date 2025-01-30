@@ -31,7 +31,7 @@ def extract_next_links(url, resp):
             url_without_fragment, _ = urldefrag(absolute_url)
             links.append(url_without_fragment)
     
-    return list()
+    return links
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
