@@ -3,6 +3,7 @@ import numpy as np
 import hashlib as hf
 import json
 from bs4 import BeautifulSoup
+import os
 
 
 #basic simhash algorithm
@@ -35,7 +36,7 @@ def fingerPrint(tokens, bitSize):
 
     return simhash
 
-def hammingDistance(fingerPrint1, fingerPrint2, bitSize):
+def getHammingDistance(fingerPrint1, fingerPrint2, bitSize):
     distance = 0
     for i in range(bitSize):
         if fingerPrint1[i] != fingerPrint2[i]:
@@ -43,15 +44,16 @@ def hammingDistance(fingerPrint1, fingerPrint2, bitSize):
     return distance
     
 def simhashSimilarity(docOnetokens, docTwoTokens):
-    bitSize = 8
+    bitSize = 128
     docOneFingerPrint = fingerPrint(docOnetokens, bitSize)
     docTwoFingerPrint = fingerPrint(docTwoTokens, bitSize)
-    hammingDistance = hammingDistance(docOneFingerPrint, docTwoFingerPrint, bitSize)
+    hammingDistance = getHammingDistance(docOneFingerPrint, docTwoFingerPrint, bitSize)
     similarity = 1 - (hammingDistance / len(docOneFingerPrint))
-    print("Similarity is "+ str(similarity))
+    return similarity
 
+#removes non-text tags
 def getTextContentOnly(htmlContent):
-    soup = BeautifulSoup(htmlContent, 'lxml')
+    soup = BeautifulSoup(htmlContent, 'html.parser')
     tags_to_remove = ['img', 'video', 'audio', 'iframe', 'object', 'embed', 'svg', 'canvas']
     for tag in tags_to_remove:
         for element in soup.find_all(tag):
@@ -64,21 +66,21 @@ def getTextContentOnly(htmlContent):
 
 
 def readCrawledDocuments():
+    ## needs to updated for new crawled document
     with open('pages/344eba531529982e8a935c573a8837f4dbca46fb8bc1c9aacbe8db323864aa6d.json', 'r') as file:
         obj = json.load(file)
         baseHtmlContent = obj.get("content")
         baseTextOnlyHtmlContent = getTextContentOnly(baseHtmlContent)
 
-    files = ['pages/344eba531529982e8a935c573a8837f4dbca46fb8bc1c9aacbe8db323864aa6d.json',
-             'pages/943a480e0409bfd655ed5a5f978124297a6d7103a780c8352bd7b3dc0a362d1a.json']
-
-    for path in files:
-        with open(path, 'r') as file:
-            obj = json.load(file)
-            htmlContent = obj.get("content")
-            textOnlyHtmlContent = getTextContentOnly(htmlContent)
-            sim = simhashSimilarity(baseTextOnlyHtmlContent, textOnlyHtmlContent)
-            print("Sscore is: " + str(sim))
+    for _, _, files in os.walk('pages/'):
+        for filename in files:
+            with open(os.path.join('pages/', filename), 'r') as file:
+                obj = json.load(file)
+                htmlContent = obj.get("content")
+                textOnlyHtmlContent = getTextContentOnly(htmlContent)
+                sim = simhashSimilarity(baseTextOnlyHtmlContent, textOnlyHtmlContent)
+                #print(textOnlyHtmlContent)
+                print(sim)
             
 
 
