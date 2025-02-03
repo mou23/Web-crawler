@@ -94,8 +94,28 @@ def textToHtmlContentRatio(htmlContent):
     print("The ration is" + str(ratio))
     return ratio
 
-def isNonImportantPage():
-    x=0
+def isNonImportantPage(htmlContent):
+    actualText = getTextContentOnly(htmlContent).lower()
+    
+    # check if text length is lower than a threshold
+    if(len(actualText) <= 100):
+        return True
+
+    # check if contains these messages
+    messages = ["Sorry you dont have enough rights to read files",
+     "Page does not exist", "Page not found"]
+    for m in messages:
+        if actualText.contains(m.lower()):
+            return True
+    return False
+
+def getSimilarParagraphsInSinglePage(htmlContent):
+    soup = BeautifulSoup(htmlContent, 'html.parser')  
+    paragraphs = []
+    for p in soup.find_all('p'):
+        paragraphs.append(p.get_text(strip='True'))
+
+
 
 def readCrawledDocuments():
     ## needs to updated for new crawled document
@@ -112,7 +132,7 @@ def readCrawledDocuments():
                 htmlContent = obj.get("content")
                 textOnlyHtmlContent = getTextContentOnly(htmlContent)
                 sim = simhashSimilarity(baseTextOnlyHtmlContent, textOnlyHtmlContent)
-                #print(textOnlyHtmlContent)
+                print(textOnlyHtmlContent)
                 print(sim)
             
 
