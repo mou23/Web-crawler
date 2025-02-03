@@ -9,6 +9,7 @@ from urllib.parse import urldefrag
 from hashlib import sha256
 from utils.validation import is_valid_scheme, is_valid_file, is_valid_domain, pagination_trap
 import textProcessing as tp
+import csv
 
 def scraper(url, resp):
     current_time = datetime.now().timestamp()
@@ -17,13 +18,14 @@ def scraper(url, resp):
         # TODO check valid content
         
         currentPageRawResponse = resp.raw_response.content.decode('utf-8', errors='ignore')
-        currentPageTextOnlyContent = tp.getTextContentOnly(currentPageRawContent)
+        currentPageTextOnlyContent = tp.getTextContentOnly(currentPageRawResponse)
 
         #text to html ratio
         textToHtmlRatio = tp.textToHtmlContentRatio(currentPageRawResponse)
 
         #sim has Similarity
         sim = 0.0
+        foundSimilarPage = False
         for _, _, files in os.walk('pages/'):
             for filename in files:
                 with open(os.path.join('pages/', filename), 'r') as file:
@@ -31,17 +33,27 @@ def scraper(url, resp):
                     pageContent = obj.get("content")
                     pageUrl = obj.get("url")
                     textOnlyContent = tp.getTextContentOnly(pageContent)
-                    sim = simhashSimilarity(currentPageTextOnlyContent, textOnlyContent)
-                    
-                    print(pageUrl)
-                    print("current" + url)
-                    print(sim)
-                    print(textToHtmlRatio)
+                    sim = tp.simhashSimilarity(currentPageTextOnlyContent, textOnlyContent)
 
-        
-        store_content(url, resp.raw_response.content, current_time)
-        links = extract_next_links(url, resp)
+                    #write similarity statistics to a file
+                    row_data = [url, pageUrl, sim]
+                    with open('relevantPageStatistics.csv', mode='a', newline='') as file:
+                        writer = csv.writer(file)
+                        writer.writerow(row_data)
 
+                    if(sim>=0.97):
+                        foundSimilarPage = True
+                        break
+
+                    print("current Url: " + url)
+                    print("Checking with: "+ pageUrl)
+                    print("Simhash similarity: "+ str(sim))
+                    print("TexttoHtml Ration: "+ str(textToHtmlRatio))
+
+        if(foundSimilarPage==False or textToHtmlRatio>=0.15):
+            store_content(url, resp.raw_response.content, current_time, textToHtmlRatio)
+
+        links = extract_next_links(url, resp)  
         return [link for link in links if is_valid(link)]
 
     return []
@@ -82,7 +94,7 @@ def is_valid(url):
     except Exception as e:
         print ("Exception when validating url:", e)
 
-def store_content(url, content, current_time):
+def store_content(url, content, current_time, textToHtmlRatio):
     os.makedirs("pages", exist_ok=True)
     url_hash = sha256(url.encode()).hexdigest()
     filename = os.path.join("pages", f"{url_hash}.json")
@@ -90,6 +102,7 @@ def store_content(url, content, current_time):
     data = {
         "url": url,
         "timestamp": current_time,
+        "textToHtmlRatio": textToHtmlRatio,
         "content": content.decode('utf-8', errors='ignore')
     }
 

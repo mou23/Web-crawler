@@ -83,6 +83,7 @@ def getTextContentOnly(htmlContent):
 # get actual text to html text ratio
 def textToHtmlContentRatio(htmlContent):
     actualText = getTextContentOnly(htmlContent)
+    #soup = BeautifulSoup(htmlContent, 'html.parser')
 
     actualTextLength = len(actualText)
     htmlLength = len(htmlContent)
