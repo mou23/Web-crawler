@@ -18,12 +18,12 @@ def is_valid_file(parsed_url):
         + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed_url.path.lower())
 
 def is_valid_domain(parsed_url):
+    #"cs.uci.edu", 
+    #"informatics.uci.edu", 
+    #"today.uci.edu"
     allowed_domains = [
-        "ics.uci.edu", 
-        "cs.uci.edu", 
-        "informatics.uci.edu", 
-        "stat.uci.edu",
-        "today.uci.edu"
+        "ics.uci.edu"
+        
     ]
     
     if not any(parsed_url.hostname.endswith(domain) for domain in allowed_domains):

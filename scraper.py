@@ -8,12 +8,37 @@ from urllib.parse import urljoin
 from urllib.parse import urldefrag
 from hashlib import sha256
 from utils.validation import is_valid_scheme, is_valid_file, is_valid_domain, pagination_trap
+import textProcessing as tp
 
 def scraper(url, resp):
     current_time = datetime.now().timestamp()
 
     if (resp.status== 200):
         # TODO check valid content
+        
+        currentPageRawResponse = resp.raw_response.content.decode('utf-8', errors='ignore')
+        currentPageTextOnlyContent = tp.getTextContentOnly(currentPageRawContent)
+
+        #text to html ratio
+        textToHtmlRatio = tp.textToHtmlContentRatio(currentPageRawResponse)
+
+        #sim has Similarity
+        sim = 0.0
+        for _, _, files in os.walk('pages/'):
+            for filename in files:
+                with open(os.path.join('pages/', filename), 'r') as file:
+                    obj = json.load(file)
+                    pageContent = obj.get("content")
+                    pageUrl = obj.get("url")
+                    textOnlyContent = tp.getTextContentOnly(pageContent)
+                    sim = simhashSimilarity(currentPageTextOnlyContent, textOnlyContent)
+                    
+                    print(pageUrl)
+                    print("current" + url)
+                    print(sim)
+                    print(textToHtmlRatio)
+
+        
         store_content(url, resp.raw_response.content, current_time)
         links = extract_next_links(url, resp)
 

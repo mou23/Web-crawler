@@ -65,7 +65,7 @@ def simhashSimilarity(docOnetokens, docTwoTokens):
     hammingDistance = getHammingDistance(docOneFingerPrint, docTwoFingerPrint, bitSize)
     similarity = 1 - (hammingDistance / len(docOneFingerPrint))
     consineSimilarity = getCosineSimilarity(docOneFingerPrint, docTwoFingerPrint)
-    print("cosine sim is"+ str(consineSimilarity))
+    #print("cosine sim is"+ str(consineSimilarity))
     return similarity
 
 #removes non-text tags
@@ -91,7 +91,7 @@ def textToHtmlContentRatio(htmlContent):
         return 0
     
     ratio = actualTextLength / htmlLength
-    print("The ration is" + str(ratio))
+    #print("The ration is" + str(ratio))
     return ratio
 
 def isNonImportantPage(htmlContent):
@@ -132,9 +132,9 @@ def readCrawledDocuments():
                 htmlContent = obj.get("content")
                 textOnlyHtmlContent = getTextContentOnly(htmlContent)
                 sim = simhashSimilarity(baseTextOnlyHtmlContent, textOnlyHtmlContent)
-                print(textOnlyHtmlContent)
+                #print(textOnlyHtmlContent)
                 print(sim)
             
 
 
-readCrawledDocuments()
+#readCrawledDocuments()
