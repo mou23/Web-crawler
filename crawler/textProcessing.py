@@ -42,19 +42,36 @@ def getHammingDistance(fingerPrint1, fingerPrint2, bitSize):
         if fingerPrint1[i] != fingerPrint2[i]:
             distance = distance + 1
     return distance
+ 
+
+def getCosineSimilarity(fingerprint1, fingerprint2):
+    a = np.array([int(bit) for bit in fingerprint1])
+    b = np.array([int(bit) for bit in fingerprint2])
     
+    dot_product = np.dot(a, b)
+    magnitude_a = np.linalg.norm(a)
+    magnitude_b = np.linalg.norm(b)
+    
+    if magnitude_a == 0 or magnitude_b == 0:
+        return 0
+    
+    return dot_product / (magnitude_a * magnitude_b)
+
+
 def simhashSimilarity(docOnetokens, docTwoTokens):
     bitSize = 128
     docOneFingerPrint = fingerPrint(docOnetokens, bitSize)
     docTwoFingerPrint = fingerPrint(docTwoTokens, bitSize)
     hammingDistance = getHammingDistance(docOneFingerPrint, docTwoFingerPrint, bitSize)
     similarity = 1 - (hammingDistance / len(docOneFingerPrint))
+    consineSimilarity = getCosineSimilarity(docOneFingerPrint, docTwoFingerPrint)
+    print("cosine sim is"+ str(consineSimilarity))
     return similarity
 
 #removes non-text tags
 def getTextContentOnly(htmlContent):
     soup = BeautifulSoup(htmlContent, 'html.parser')
-    tags_to_remove = ['img', 'video', 'audio', 'iframe', 'object', 'embed', 'svg', 'canvas']
+    tags_to_remove = ['img', 'video', 'audio', 'iframe', 'object', 'embed', 'svg', 'canvas','footer', 'ads', 'script', 'style']
     for tag in tags_to_remove:
         for element in soup.find_all(tag):
             element.decompose()  # Remove the tag from the tree
@@ -63,10 +80,26 @@ def getTextContentOnly(htmlContent):
     text_content = soup.get_text(separator=' ', strip=True)
     return text_content
 
+# get actual text to html text ratio
+def textToHtmlContentRatio(htmlContent):
+    actualText = getTextContentOnly(htmlContent)
 
+    actualTextLength = len(actualText)
+    htmlLength = len(htmlContent)
+
+    if htmlLength == 0: 
+        return 0
+    
+    ratio = actualTextLength / htmlLength
+    print("The ration is" + str(ratio))
+    return ratio
+
+def isNonImportantPage():
+    x=0
 
 def readCrawledDocuments():
     ## needs to updated for new crawled document
+    threshold = 0.2
     with open('pages/344eba531529982e8a935c573a8837f4dbca46fb8bc1c9aacbe8db323864aa6d.json', 'r') as file:
         obj = json.load(file)
         baseHtmlContent = obj.get("content")
