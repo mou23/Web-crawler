@@ -15,17 +15,18 @@ def scraper(url, resp):
 
     if (resp.status== 200):
         # TODO check valid content
-        
-        current_page_raw_response = resp.raw_response.content.decode('utf-8', errors='ignore')
-        current_page_text_only_content = tp.get_text_content_only(current_page_raw_response)
+        if resp.raw_response.content:
+            current_page_raw_response = resp.raw_response.content.decode('utf-8', errors='ignore')
+            current_page_text_only_content = tp.get_text_content_only(current_page_raw_response)
 
-        text_to_html_ratio = tp.text_to_html_content_ratio(current_page_raw_response)
-
-        if(similar_content_exist(url, current_page_text_only_content)==False or text_to_html_ratio>=0.15):
-            store_content(url, resp.raw_response.content, current_time, text_to_html_ratio)
-
-        links = extract_next_links(url, resp)  
-        return [link for link in links if is_valid(link)]
+            text_to_html_ratio = tp.text_to_html_content_ratio(current_page_raw_response)
+            if(text_to_html_ratio>=0.01):
+                if(similar_content_exist(url, current_page_text_only_content)==False):
+                    store_content(url, resp.raw_response.content, current_time, text_to_html_ratio)
+                    links = extract_next_links(url, resp)  
+                    return [link for link in links if is_valid(link)]
+            else:
+                print(url, text_to_html_ratio)
 
     return []
 
