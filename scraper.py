@@ -1,15 +1,14 @@
 import re
 import os
+import csv
 import json
+from hashlib import sha256
 from datetime import datetime
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse, parse_qs, urlunparse, urlencode
-from urllib.parse import urljoin
-from urllib.parse import urldefrag
-from hashlib import sha256
+import utils.text_processor as tp
 from utils.validation import is_valid_scheme, is_valid_file, is_valid_domain, pagination_trap
-import textProcessing as tp
-import csv
+from utils.similar_content_checker import similar_content_exist
+from urllib.parse import urlparse, parse_qs, urlunparse, urlencode, urljoin, urldefrag
 
 def scraper(url, resp):
     current_time = datetime.now().timestamp()
@@ -17,41 +16,13 @@ def scraper(url, resp):
     if (resp.status== 200):
         # TODO check valid content
         
-        currentPageRawResponse = resp.raw_response.content.decode('utf-8', errors='ignore')
-        currentPageTextOnlyContent = tp.getTextContentOnly(currentPageRawResponse)
+        current_page_raw_response = resp.raw_response.content.decode('utf-8', errors='ignore')
+        current_page_text_only_content = tp.get_text_content_only(current_page_raw_response)
 
-        #text to html ratio
-        textToHtmlRatio = tp.textToHtmlContentRatio(currentPageRawResponse)
+        text_to_html_ratio = tp.text_to_html_content_ratio(current_page_raw_response)
 
-        #sim has Similarity
-        sim = 0.0
-        foundSimilarPage = False
-        for _, _, files in os.walk('pages/'):
-            for filename in files:
-                with open(os.path.join('pages/', filename), 'r') as file:
-                    obj = json.load(file)
-                    pageContent = obj.get("content")
-                    pageUrl = obj.get("url")
-                    textOnlyContent = tp.getTextContentOnly(pageContent)
-                    sim = tp.simhashSimilarity(currentPageTextOnlyContent, textOnlyContent)
-
-                    #write similarity statistics to a file
-                    row_data = [url, pageUrl, sim]
-                    with open('relevantPageStatistics.csv', mode='a', newline='') as file:
-                        writer = csv.writer(file)
-                        writer.writerow(row_data)
-
-                    if(sim>=0.97):
-                        foundSimilarPage = True
-                        break
-
-                    print("current Url: " + url)
-                    print("Checking with: "+ pageUrl)
-                    print("Simhash similarity: "+ str(sim))
-                    print("TexttoHtml Ration: "+ str(textToHtmlRatio))
-
-        if(foundSimilarPage==False or textToHtmlRatio>=0.15):
-            store_content(url, resp.raw_response.content, current_time, textToHtmlRatio)
+        if(similar_content_exist(url, current_page_text_only_content)==False or text_to_html_ratio>=0.15):
+            store_content(url, resp.raw_response.content, current_time, text_to_html_ratio)
 
         links = extract_next_links(url, resp)  
         return [link for link in links if is_valid(link)]
