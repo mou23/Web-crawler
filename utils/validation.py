@@ -22,16 +22,15 @@ def is_valid_domain(parsed_url):
     #"informatics.uci.edu", 
     #"today.uci.edu"
     allowed_domains = [
-        "ics.uci.edu"
-        
+        "ics.uci.edu", 
+        "cs.uci.edu", 
+        "informatics.uci.edu", 
+        "stat.uci.edu"
     ]
     
     if not any(parsed_url.hostname.endswith(domain) for domain in allowed_domains):
         return False
     
-    if parsed_url.hostname == "today.uci.edu" and not parsed_url.path.startswith("/department/information_computer_sciences/"):
-        return False
-
     return True
 
 def pagination_trap(parsed_url):
