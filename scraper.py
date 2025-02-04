@@ -3,7 +3,7 @@ import os
 import json
 from datetime import datetime
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs, urlunparse, urlencode
 from urllib.parse import urljoin
 from urllib.parse import urldefrag
 from hashlib import sha256
@@ -72,10 +72,32 @@ def extract_next_links(url, resp):
     soup = BeautifulSoup(resp.raw_response.content, "html.parser")
     for a_tag in soup.find_all("a", href=True):
         absolute_url = urljoin(url, a_tag["href"])
-        url_without_fragment, _ = urldefrag(absolute_url)
-        links.append(url_without_fragment)
+        cleaned_url = _clean_url(absolute_url)
+        links.append(cleaned_url)
     
     return links
+
+def _clean_url(url):
+    url, _ = urldefrag(url)  # Remove fragment
+    url = _filter_and_sort_query_params(url)  # Sort query parameters
+
+    return url
+
+def _filter_and_sort_query_params(url):
+    parsed = urlparse(url)
+    query_params = parse_qs(parsed.query)
+
+    IGNORE_PARAMS = set()
+    if "ics.uci.edu" in parsed.netloc:
+        IGNORE_PARAMS.update(["tab_details", "tab_files", "image"])
+    
+    filtered_params = {k: v for k, v in query_params.items() if k not in IGNORE_PARAMS}
+
+    sorted_query = urlencode(sorted(filtered_params.items()), doseq=True)
+    normalized_url = urlunparse((parsed.scheme, parsed.netloc, parsed.path, 
+                                 parsed.params, sorted_query, parsed.fragment))
+    
+    return normalized_url
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
