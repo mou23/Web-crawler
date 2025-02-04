@@ -115,3 +115,4 @@ pages/
 frontier.shelve.*
 out.txt
 relevantPageStatistics.csv
+fingerprints/
