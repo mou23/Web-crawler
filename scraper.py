@@ -1,15 +1,14 @@
 import re
 import os
+import csv
 import json
+from hashlib import sha256
 from datetime import datetime
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse
-from urllib.parse import urljoin
-from urllib.parse import urldefrag
-from hashlib import sha256
+import utils.text_processor as tp
 from utils.validation import is_valid_scheme, is_valid_file, is_valid_domain, pagination_trap
-import textProcessing as tp
-import csv
+from utils.similar_content_checker import similar_content_exist
+from urllib.parse import urlparse, parse_qs, urlunparse, urlencode, urljoin, urldefrag
 
 def scraper(url, resp):
     current_time = datetime.now().timestamp()
@@ -17,41 +16,13 @@ def scraper(url, resp):
     if (resp.status== 200):
         # TODO check valid content
         
-        currentPageRawResponse = resp.raw_response.content.decode('utf-8', errors='ignore')
-        currentPageTextOnlyContent = tp.getTextContentOnly(currentPageRawResponse)
+        current_page_raw_response = resp.raw_response.content.decode('utf-8', errors='ignore')
+        current_page_text_only_content = tp.get_text_content_only(current_page_raw_response)
 
-        #text to html ratio
-        textToHtmlRatio = tp.textToHtmlContentRatio(currentPageRawResponse)
+        text_to_html_ratio = tp.text_to_html_content_ratio(current_page_raw_response)
 
-        #sim has Similarity
-        sim = 0.0
-        foundSimilarPage = False
-        for _, _, files in os.walk('pages/'):
-            for filename in files:
-                with open(os.path.join('pages/', filename), 'r') as file:
-                    obj = json.load(file)
-                    pageContent = obj.get("content")
-                    pageUrl = obj.get("url")
-                    textOnlyContent = tp.getTextContentOnly(pageContent)
-                    sim = tp.simhashSimilarity(currentPageTextOnlyContent, textOnlyContent)
-
-                    #write similarity statistics to a file
-                    row_data = [url, pageUrl, sim]
-                    with open('relevantPageStatistics.csv', mode='a', newline='') as file:
-                        writer = csv.writer(file)
-                        writer.writerow(row_data)
-
-                    if(sim>=0.97):
-                        foundSimilarPage = True
-                        break
-
-                    print("current Url: " + url)
-                    print("Checking with: "+ pageUrl)
-                    print("Simhash similarity: "+ str(sim))
-                    print("TexttoHtml Ration: "+ str(textToHtmlRatio))
-
-        if(foundSimilarPage==False or textToHtmlRatio>=0.15):
-            store_content(url, resp.raw_response.content, current_time, textToHtmlRatio)
+        if(similar_content_exist(url, current_page_text_only_content)==False or text_to_html_ratio>=0.15):
+            store_content(url, resp.raw_response.content, current_time, text_to_html_ratio)
 
         links = extract_next_links(url, resp)  
         return [link for link in links if is_valid(link)]
@@ -72,10 +43,32 @@ def extract_next_links(url, resp):
     soup = BeautifulSoup(resp.raw_response.content, "html.parser")
     for a_tag in soup.find_all("a", href=True):
         absolute_url = urljoin(url, a_tag["href"])
-        url_without_fragment, _ = urldefrag(absolute_url)
-        links.append(url_without_fragment)
+        cleaned_url = _clean_url(absolute_url)
+        links.append(cleaned_url)
     
     return links
+
+def _clean_url(url):
+    url, _ = urldefrag(url)  # Remove fragment
+    url = _filter_and_sort_query_params(url)  # Sort query parameters
+
+    return url
+
+def _filter_and_sort_query_params(url):
+    parsed = urlparse(url)
+    query_params = parse_qs(parsed.query)
+
+    IGNORE_PARAMS = set()
+    if "ics.uci.edu" in parsed.netloc:
+        IGNORE_PARAMS.update(["tab_details", "tab_files", "image"])
+    
+    filtered_params = {k: v for k, v in query_params.items() if k not in IGNORE_PARAMS}
+
+    sorted_query = urlencode(sorted(filtered_params.items()), doseq=True)
+    normalized_url = urlunparse((parsed.scheme, parsed.netloc, parsed.path, 
+                                 parsed.params, sorted_query, parsed.fragment))
+    
+    return normalized_url
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
