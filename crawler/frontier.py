@@ -4,7 +4,7 @@ import shelve
 from threading import Thread, RLock
 from queue import Queue, Empty
 
-from utils import get_logger, get_urlhash, normalize
+from utils import get_logger, get_urlhash, normalize, ThreadShelf
 from scraper import is_valid
 
 class Frontier(object):
@@ -24,7 +24,7 @@ class Frontier(object):
                 f"Found save file {self.config.save_file}, deleting it.")
             os.remove(self.config.save_file)
         # Load existing save file, or create one if it does not exist.
-        self.save = shelve.open(self.config.save_file)
+        self.save = ThreadShelf(self.config.save_file)
         if restart:
             for url in self.config.seed_urls:
                 self.add_url(url)
