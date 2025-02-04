@@ -115,3 +115,5 @@ pages/
 frontier.shelve.*
 out.txt
 relevantPageStatistics.csv
+relevantPageStatisticsInformatics.csv
+#relevantPageStatisticsInformatics.csv#
