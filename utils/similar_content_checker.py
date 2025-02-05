@@ -70,8 +70,8 @@ def similar_content_exist(url, new_content):
     found_similar_content = False
     for current_url, current_fingerprint in db.items():
         similarity = get_simhash_similarity(new_finger_print, current_fingerprint)
-        if similarity >= 0.97:
-            print(f"{url} matched with URL: {current_url}")
+        if similarity >= 0.99:
+            print(f"{url} matched with URL: {current_url}, {similarity}")
             found_similar_content = True
             break
     
