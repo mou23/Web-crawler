@@ -7,11 +7,13 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 import utils.text_processor as tp
 from utils.validation import is_valid_scheme, is_valid_file, is_valid_domain, pagination_trap
-from utils.similar_content_checker import similar_content_exist
 from urllib.parse import urlparse, parse_qs, urlunparse, urlencode, urljoin, urldefrag
+from utils.simhash import SimhashDBManager
 
 def scraper(url, resp):
     current_time = datetime.now().timestamp()
+
+    simhash_db = SimhashDBManager()
 
     if (resp.status== 200) and (resp.raw_response is not None):
         current_page_raw_response = resp.raw_response.content.decode('utf-8', errors='ignore')
@@ -19,7 +21,7 @@ def scraper(url, resp):
 
         text_to_html_ratio = tp.text_to_html_content_ratio(current_page_raw_response)
         if(text_to_html_ratio>=0.01):
-            if(similar_content_exist(url, current_page_text_only_content)==False):
+            if(not simhash_db.is_duplicate(url, current_page_text_only_content)):
                 store_content(url, resp.raw_response.content, current_time, text_to_html_ratio)
                 links = extract_next_links(url, resp)  
                 return [link for link in links if is_valid(link)]
