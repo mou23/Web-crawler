@@ -8,7 +8,7 @@ def is_valid_scheme(parsed_url):
 
 def is_valid_file(parsed_url):
     return not re.match(
-        r".*\.(css|js|bmp|gif|jpe?g|ico"
+        r".*\.(css|js|bmp|gif|jpe?g|ico|img"
         + r"|png|tiff?|mid|mp2|mp3|mp4"
         + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
         + r"|ps|eps|tex|ppt|pptx|ppsx|doc|docx|xls|xlsx|names"
