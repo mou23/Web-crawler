@@ -59,11 +59,8 @@ def _filter_and_sort_query_params(url):
     parsed = urlparse(url)
     query_params = parse_qs(parsed.query)
 
-    IGNORE_PARAMS = set()
-    if "ics.uci.edu" in parsed.netloc:
-        IGNORE_PARAMS.update(["tab_details", "tab_files", "image"])
-    
-    filtered_params = {k: v for k, v in query_params.items() if k not in IGNORE_PARAMS}
+    IGNORE_PARAMS = {"filter", "tab_", "image", "sort", "order", "from", "to", "limit"}
+    filtered_params = {k: v for k, v in query_params.items() if not any(k.startswith(ignore) for ignore in IGNORE_PARAMS)}
 
     sorted_query = urlencode(sorted(filtered_params.items()), doseq=True)
     normalized_url = urlunparse((parsed.scheme, parsed.netloc, parsed.path, 
@@ -89,7 +86,6 @@ def is_valid(url):
         print ("Exception when validating url:", e)
 
 def store_content(url, content, current_time, textToHtmlRatio):
-    os.makedirs("pages", exist_ok=True)
     url_hash = sha256(url.encode()).hexdigest()
     filename = os.path.join("pages", f"{url_hash}.json")
 

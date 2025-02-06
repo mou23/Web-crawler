@@ -2,7 +2,7 @@ from utils import get_logger
 from crawler.frontier import Frontier
 from crawler.worker import Worker
 from utils.simhash import SimhashDBManager
-
+import os
 class Crawler(object):
     def __init__(self, config, restart, frontier_factory=Frontier, worker_factory=Worker):
         self.config = config
@@ -11,6 +11,7 @@ class Crawler(object):
         self.simhash_db = SimhashDBManager()
         self.workers = list()
         self.worker_factory = worker_factory
+        os.makedirs("pages", exist_ok=True)
 
     def start_async(self):
         self.workers = [

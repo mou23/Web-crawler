@@ -31,13 +31,13 @@ class SimhashDBManager:
                 similarity = get_simhash_similarity(new_finger_print, current_fingerprint)
                 if similarity >= 0.99:
                     print(f"{url} matched with URL: {current_url}, {similarity}")
-                    self.db[url] = new_finger_print
-                    self.counter += 1
-
-                    if self.counter % 1000 == 0:
-                        self.flush_db()
-
                     return True
+
+            self.db[url] = new_finger_print
+            self.counter += 1
+
+            if self.counter % 1000 == 0:
+                self.flush_db()
             
         return False
 
