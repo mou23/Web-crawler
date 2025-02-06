@@ -72,9 +72,3 @@ class SimhashDBManager:
                 self.flush_db()
             
         return False
-
-        diff_bits = simhash.num_differing_bits(hash1, hash2)
-
-        print(f"SimHash for doc1: {hash1}")
-        print(f"SimHash for doc2: {hash2}")
-        print(f"Number of differing bits: {diff_bits}")
