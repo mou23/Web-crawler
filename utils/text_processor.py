@@ -128,51 +128,7 @@ def page_contains_large_files(htmlContent,url):
     img_tags = soup.find_all('img')
     video_tags = soup.find_all('video')
     a_tags = soup.find_all('a', href=True)
-
-    nextButtonClasses = [
-  '.next',
-  '.next-btn',
-  '.next-button',
-  '.next-page',
-  '.next-page-btn',
-  '.load-next',
-  '.pagination-next',
-  '.next-arrow',
-  '.next-icon',
-  '.next-link',
-  '.next-item',
-  '.next-page-arrow',
-  '.next-slide',
-  '.next-control',
-  '.next-control-button',
-  '.next-slide-btn'
-]
-
-    prevButtonClasses = [
-  '.previous',
-  '.prev',
-  '.prev-btn',
-  '.prev-button',
-  '.prev-page',
-  '.prev-page-btn',
-  '.load-previous',
-  '.pagination-prev',
-  '.previous-arrow',
-  '.prev-icon',
-  '.prev-link',
-  '.prev-item',
-  '.prev-page-arrow',
-  '.prev-slide',
-  '.prev-control',
-  '.prev-control-button',
-  '.prev-slide-btn'
-];
-
-    svg_tags = soup.find_all('svg')
-
-    for s in svg_tags:
-        if s.classList.contains()
-
+    
     # Check images (src attribute)
     for img in img_tags:
         img_url = urljoin(url, img.get('src'))
