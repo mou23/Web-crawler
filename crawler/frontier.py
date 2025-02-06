@@ -84,10 +84,10 @@ class Frontier(object):
         return self.domain_locks[domain]
     
     def get_tbd_url(self):
+        if self.queue_is_empty(self.to_be_downloaded):
+            return None
+        
         with self.lock:
-            if self.to_be_downloaded.empty():
-                return None
-            
             while True:
                 url = self.to_be_downloaded.get().url
                 domain = _get_three_level_domain(url)
@@ -100,7 +100,13 @@ class Frontier(object):
                     else:
                         self.last_crawl_time[domain] = time.time()
                         return url
-            
+    
+    def queue_is_empty(self, q, timeout=5):
+        if q.empty():
+            time.sleep(timeout)
+            return q.empty() 
+        return False 
+    
 class TimedTask:
     def __init__(self, timestamp, url):
         self.timestamp = timestamp
