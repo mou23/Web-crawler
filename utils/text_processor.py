@@ -3,6 +3,8 @@ from fuzzywuzzy import fuzz
 from collections import Counter
 import json
 import os
+from urllib.parse import urljoin, urlparse
+import requests
 
 #removes non-text tags
 def get_text_content_only(html_content):
@@ -84,15 +86,11 @@ def find_duplicates_by_fuzzy(paragraphs, similarity_threshold):
 
 def page_contains_dupliacte_paragraphs(htmlContent):
     paragraphs = get_paragraphs(htmlContent)
-    print(len(paragraphs))
-    duplicates, paragraph_to_duplicateCount = find_duplicates_by_fuzzy(paragraphs, 85)
-    print('dups')
-    print(len(duplicates))
-    print(len(paragraph_to_duplicateCount))
-
-    for x,y in paragraph_to_duplicateCount.items():
-        print(x)
-        print(y)
+    #print(len(paragraphs))
+    duplicates, paragraph_to_duplicateCount = find_duplicates_by_fuzzy(paragraphs, 95)
+    #print('dups')
+    #print(len(duplicates))
+    #print(len(paragraph_to_duplicateCount))
 
     if len(duplicates) == 0:
         print('no duplicates found')
@@ -103,14 +101,118 @@ def page_contains_dupliacte_paragraphs(htmlContent):
     
     print('avg duplicates: '+str(avg_duplicates))
     if avg_duplicates > 2:
+        print("duplicate paragraphs found")
+        return True
+    else:
+        return False
+
+def is_large_file(url):
+    threshold_size = 10 * 1024   # 10 kb
+    try:
+        response = requests.head(url, allow_redirects=True)  # Only get headers, avoid downloading the entire file
+        # Check the content-length header
+        content_length = response.headers.get('Content-Length')
+        if content_length:
+            file_size = int(content_length)
+            print("read file "+url)
+            return file_size >= threshold_size
+    except Exception as e:
+        print(f"Error checking file size for {url}: {e}")
+    return False
+
+def page_contains_large_files(htmlContent,url):
+    large_files = []
+    soup = BeautifulSoup(htmlContent, 'html.parser')
+    large_file_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.mp4', '.mkv', '.avi', '.webm', '.pdf', '.zip', '.rar']
+
+    img_tags = soup.find_all('img')
+    video_tags = soup.find_all('video')
+    a_tags = soup.find_all('a', href=True)
+
+    nextButtonClasses = [
+  '.next',
+  '.next-btn',
+  '.next-button',
+  '.next-page',
+  '.next-page-btn',
+  '.load-next',
+  '.pagination-next',
+  '.next-arrow',
+  '.next-icon',
+  '.next-link',
+  '.next-item',
+  '.next-page-arrow',
+  '.next-slide',
+  '.next-control',
+  '.next-control-button',
+  '.next-slide-btn'
+]
+
+    prevButtonClasses = [
+  '.previous',
+  '.prev',
+  '.prev-btn',
+  '.prev-button',
+  '.prev-page',
+  '.prev-page-btn',
+  '.load-previous',
+  '.pagination-prev',
+  '.previous-arrow',
+  '.prev-icon',
+  '.prev-link',
+  '.prev-item',
+  '.prev-page-arrow',
+  '.prev-slide',
+  '.prev-control',
+  '.prev-control-button',
+  '.prev-slide-btn'
+];
+
+    svg_tags = soup.find_all('svg')
+
+    for s in svg_tags:
+        if s.classList.contains()
+
+    # Check images (src attribute)
+    for img in img_tags:
+        img_url = urljoin(url, img.get('src'))
+        
+        for ext in large_file_extensions:
+            if img_url.endswith(ext):
+                if is_large_file(img_url):
+                    large_files.append(img_url)
+
+    # Check videos (src or source tag)
+    for video in video_tags:
+        for source in video.find_all('source', src=True):
+            video_url = urljoin(url, source['src'])
+
+            for ext in large_file_extensions:
+                if video_url.endswith(ext):
+                    if is_large_file(video_url):
+                        large_files.append(video_url)   
+
+
+        # Check download links (a href attribute)
+    for a in a_tags:
+        file_url = urljoin(url, a['href'])
+            
+        for ext in large_file_extensions:
+            if file_url.endswith(ext):
+                if is_large_file(file_url):
+                    large_files.append(file_url)   
+
+    if len(large_files) > 2:
         return True
     else:
         return False
 
 
 
-print('go go')
+
+#print('go go')
 # Open the file and read the JSON object
-with open('/home/akhatun/Documents/Web-crawler/pages/sample.json', 'r') as file:
-    data = json.load(file)
-print("is duplicates "+ str(page_contains_dupliacte_paragraphs(data['content'])))
+#with open('/home/akhatun/Documents/Web-crawler/pages/sample.json', 'r') as file:
+    #data = json.load(file)
+#print("is duplicates "+ str(page_contains_dupliacte_paragraphs(data['content'])))
+#print("has large files: "+ str(page_contains_large_files(data['content'],data['url'])))
