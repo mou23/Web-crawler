@@ -1,6 +1,7 @@
 import threading
 from rocksdict import Rdict
 from utils.similar_content_checker import get_finger_print, get_simhash_similarity
+import simhash
 
 class SimhashDBManager:
     _shared_state = {}  # Borg shared state
@@ -44,3 +45,36 @@ class SimhashDBManager:
     def flush_db(self):
         self.db.close()
         self.db = Rdict(self.db_path)
+
+    def _hash_token_to_int(self, token):
+        return abs(hash(token))
+
+    def lib_get_fingerprint(self, content):
+        tokens = content.split()
+        tokens = [self._hash_token_to_int(token) for token in tokens]
+        return simhash.compute(tokens)
+
+
+    def lib_is_duplicate(self, url, new_content):
+        new_finger_print = self.lib_get_fingerprint(new_content)
+        
+        with self.db_lock: 
+            for current_url, current_fingerprint in self.db.items():
+                distance = simhash.num_differing_bits(new_finger_print, current_fingerprint)
+                if distance <= 2:
+                    print(f"{url} matched with URL: {current_url}, {distance}")
+                    return True
+
+            self.db[url] = new_finger_print
+            self.counter += 1
+
+            if self.counter % 1000 == 0:
+                self.flush_db()
+            
+        return False
+
+        diff_bits = simhash.num_differing_bits(hash1, hash2)
+
+        print(f"SimHash for doc1: {hash1}")
+        print(f"SimHash for doc2: {hash2}")
+        print(f"Number of differing bits: {diff_bits}")

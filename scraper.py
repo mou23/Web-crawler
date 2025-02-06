@@ -21,7 +21,7 @@ def scraper(url, resp):
 
         text_to_html_ratio = tp.text_to_html_content_ratio(current_page_raw_response)
         if text_to_html_ratio>=0.01 and not tp.page_contains_dupliacte_paragraphs(current_page_text_only_content):
-            if(not simhash_db.is_duplicate(url, current_page_text_only_content)):
+            if(not simhash_db.lib_is_duplicate(url, current_page_text_only_content)):
                 store_content(url, resp.raw_response.content, current_time, text_to_html_ratio)
                 links = extract_next_links(url, resp)  
                 return [link for link in links if is_valid(link)]
