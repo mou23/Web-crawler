@@ -93,7 +93,6 @@ def page_contains_dupliacte_paragraphs(htmlContent):
     #print(len(paragraph_to_duplicateCount))
 
     if len(duplicates) == 0:
-        print('no duplicates found')
         return False
 
     #check in avergae the methods have how many duplicates or set any threshold ??
@@ -168,10 +167,10 @@ def page_contains_large_files(htmlContent,url):
   '.prev-slide-btn'
 ];
 
-    svg_tags = soup.find_all('svg')
 
     for s in svg_tags:
-        if s.classList.contains()
+        if s.classList.contains():
+            svg_tags = soup.find_all('svg')
 
     # Check images (src attribute)
     for img in img_tags:
