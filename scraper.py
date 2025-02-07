@@ -15,9 +15,12 @@ def scraper(url, resp):
 
     simhash_db = SimhashDBManager()
 
-    if (resp.status== 200) and (resp.raw_response is not None):
+    if resp.status == 200 and (resp.raw_response is not None):
         current_page_raw_response = resp.raw_response.content.decode('utf-8', errors='ignore')
         current_page_text_only_content = tp.get_text_content_only(current_page_raw_response)
+
+        if len(current_page_text_only_content.split()) < 70:
+            return []
 
         text_to_html_ratio = tp.text_to_html_content_ratio(current_page_raw_response)
         if text_to_html_ratio>=0.01 and not tp.page_contains_dupliacte_paragraphs(current_page_text_only_content):
