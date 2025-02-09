@@ -10,7 +10,7 @@ def download(url, config, logger=None):
         f"http://{host}:{port}/",
         params=[("q", f"{url}"), ("u", f"{config.user_agent}")])
     try:
-        if resp and resp.content:
+        if resp and resp.content and "text/html" in resp.headers.get("Content-Type", ""):
             return Response(cbor.loads(resp.content))
     except (EOFError, ValueError) as e:
         pass

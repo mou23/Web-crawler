@@ -9,29 +9,27 @@ import utils.text_processor as tp
 from utils.validation import is_valid_scheme, is_valid_file, is_valid_domain, pagination_trap
 from urllib.parse import urlparse, parse_qs, urlunparse, urlencode, urljoin, urldefrag
 from utils.simhash import SimhashDBManager
+from utils import get_logger
+
+logger = get_logger("FILTER")
 
 def scraper(url, resp):
-    current_time = datetime.now().timestamp()
-
     simhash_db = SimhashDBManager()
 
-    if resp.status == 200 and (resp.raw_response is not None):
-        current_page_raw_response = resp.raw_response.content.decode('utf-8', errors='ignore')
-        current_page_text_only_content = tp.get_text_content_only(current_page_raw_response)
+    if resp.status != 200 or resp.raw_response is None:
+        return []
+    
+    page_raw_response = resp.raw_response.content.decode('utf-8', errors='ignore')
+    if tp.low_value_page(url, page_raw_response):
+        return []
+    
+    page_text_only_content = tp.get_text_content_only(page_raw_response)
+    if simhash_db.lib_is_duplicate(url, page_text_only_content):
+        return []
 
-        if len(current_page_text_only_content.split()) < 70:
-            return []
-
-        text_to_html_ratio = tp.text_to_html_content_ratio(current_page_raw_response)
-        if text_to_html_ratio>=0.01 and not tp.page_contains_dupliacte_paragraphs(current_page_text_only_content):
-            if(not simhash_db.lib_is_duplicate(url, current_page_text_only_content)):
-                store_content(url, resp.raw_response.content, current_time, text_to_html_ratio)
-                links = extract_next_links(url, resp)  
-                return [link for link in links if is_valid(link)]
-        else:
-            print(url, text_to_html_ratio)
-
-    return []
+    store_content(url, page_raw_response)
+    links = extract_next_links(url, resp) 
+    return [link for link in links if is_valid(link)]
 
 def extract_next_links(url, resp):
     # url: the URL that was used to get the page
@@ -46,9 +44,12 @@ def extract_next_links(url, resp):
     
     soup = BeautifulSoup(resp.raw_response.content, "html.parser")
     for a_tag in soup.find_all("a", href=True):
-        absolute_url = urljoin(url, a_tag["href"])
-        cleaned_url = _clean_url(absolute_url)
-        links.append(cleaned_url)
+        try:
+            absolute_url = urljoin(url, a_tag["href"])
+            cleaned_url = _clean_url(absolute_url)
+            links.append(cleaned_url)
+        except Exception as e:
+            logger.info(f"Error extracting link {absolute_url} from {url}: {e}")
     
     return links
 
@@ -88,15 +89,15 @@ def is_valid(url):
     except Exception as e:
         print ("Exception when validating url:", e)
 
-def store_content(url, content, current_time, textToHtmlRatio):
+def store_content(url, content):
+    current_time = datetime.now().timestamp()
     url_hash = sha256(url.encode()).hexdigest()
     filename = os.path.join("pages", f"{url_hash}.json")
 
     data = {
         "url": url,
         "timestamp": current_time,
-        "textToHtmlRatio": textToHtmlRatio,
-        "content": content.decode('utf-8', errors='ignore')
+        "content": content
     }
 
     with open(filename, "w", encoding="utf-8") as f:

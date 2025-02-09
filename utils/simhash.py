@@ -2,7 +2,9 @@ import threading
 from rocksdict import Rdict
 from utils.similar_content_checker import get_finger_print, get_simhash_similarity
 import simhash
+from utils import get_logger
 
+logger = get_logger("FILTER")
 class SimhashDBManager:
     _shared_state = {}  # Borg shared state
     _lock = threading.Lock()
@@ -62,7 +64,7 @@ class SimhashDBManager:
             for current_url, current_fingerprint in self.db.items():
                 distance = simhash.num_differing_bits(new_finger_print, current_fingerprint)
                 if distance <= 2:
-                    print(f"{url} matched with URL: {current_url}, {distance}")
+                    logger.info(f"Duplicate page: {url} matched with URL: {current_url}, {distance}")
                     return True
 
             self.db[url] = new_finger_print

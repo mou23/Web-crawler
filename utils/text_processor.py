@@ -5,6 +5,9 @@ import json
 import os
 from urllib.parse import urljoin, urlparse
 import requests
+from utils import get_logger
+
+logger = get_logger("FILTER")
 
 #removes non-text tags
 def get_text_content_only(html_content):
@@ -84,7 +87,7 @@ def find_duplicates_by_fuzzy(paragraphs, similarity_threshold):
     
     return duplicates, paragraph_to_duplicateCount
 
-def page_contains_dupliacte_paragraphs(htmlContent):
+def page_contains_duplicate_paragraphs(htmlContent):
     paragraphs = get_paragraphs(htmlContent)
     #print(len(paragraphs))
     duplicates, paragraph_to_duplicateCount = find_duplicates_by_fuzzy(paragraphs, 95)
@@ -206,8 +209,24 @@ def page_contains_large_files(htmlContent,url):
     else:
         return False
 
+def low_value_page(url, page_raw_response):
+    text_to_html_ratio = text_to_html_content_ratio(page_raw_response)
+    page_text_only = get_text_content_only(page_raw_response)
+    words_in_page = page_text_only.split()
 
+    if len(words_in_page) < 60:
+        logger.info(f"Low value page, <60 words: {url}")
+        return True
 
+    if text_to_html_ratio <= 0.01:
+        logger.info(f"Text/Html ratio <=0.1 : {url}")
+        return True
+    
+    if page_contains_duplicate_paragraphs(page_text_only):
+        logger.info(f"Duplicate paragraphs: {url}")
+        return True
+
+    return False
 
 #print('go go')
 # Open the file and read the JSON object
