@@ -228,6 +228,15 @@ def low_value_page(url, page_raw_response):
 
     return False
 
+def isHtmlContent(htmlContent):
+    try:
+        soup = BeautifulSoup(htmlContent, 'html.parser')
+        if soup.find(['html', 'head', 'body']):
+            return True
+        return False
+    except Exception as e:
+        return False
+
 #print('go go')
 # Open the file and read the JSON object
 #with open('/home/akhatun/Documents/Web-crawler/pages/sample.json', 'r') as file:

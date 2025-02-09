@@ -19,6 +19,10 @@ def scraper(url, resp):
     if resp.status != 200 or resp.raw_response is None:
         return []
     
+    if not tp.isHtmlContent(resp.raw_response.content):
+        logger.info(f"Not html content: {url}")
+        return []
+                                  
     page_raw_response = resp.raw_response.content.decode('utf-8', errors='ignore')
     if tp.low_value_page(url, page_raw_response):
         return []
