@@ -5,3 +5,4 @@ rocksdict
 numpy
 fuzzywuzzy
 python-Levenshtein
+simhash-pybind
