@@ -32,10 +32,10 @@ def get_subdomain_counts(urls):
     for url in urls:
         cleaned_url = urldefrag(url)[0]
         parsed_url = urlparse(cleaned_url)
-        subdomain = parsed_url.netloc
+        subdomain = parsed_url.hostname
         if "ics.uci.edu" in parsed_url.netloc:
             subdomain_counts[subdomain].add(cleaned_url)
-    
+
     return subdomain_counts
     
 def get_top_longest_pages(urls, text_contents, top_n=5):
@@ -67,7 +67,7 @@ def get_stop_words(filename):
         lines = file.readlines()
     return set([line.strip() for line in lines])
 
-def get_most_common_words(text_contents, stop_words, n=50):
+def get_most_common_words(text_contents, stop_words):
     word_counter = []
     
     for text in text_contents.values():
@@ -77,7 +77,7 @@ def get_most_common_words(text_contents, stop_words, n=50):
             if word not in stop_words:
                 word_counter.append(word)
 
-    return Counter(word_counter).most_common(n)
+    return Counter(word_counter)
     
 
 directory_path = "pages"
@@ -85,29 +85,41 @@ urls, text_contents = extract_urls_and_contents(directory_path)
 
 # Q1. How many unique pages did you find?
 uniq_urls = unique_pages(urls)
-print(f'\n### Number of unique pages {uniq_urls}) ###')
-for url in uniq_urls:
-    print(url)
+print(f'\n### Number of unique pages: {len(uniq_urls)} ###')
+# for url in uniq_urls:
+#     print(url)
 
 
 # Q2. What is the longest page in terms of number of words?
 top5 = get_top_longest_pages(urls, text_contents)
 print("\n### Top longest pages ###")
 for idx, (url, count) in enumerate(top5, 1):
-    print(f"{idx}. {url} with {count} words")
+    print(f"{idx}. {url} - {count} words")
 
 # Q3. What are the 50 most common words in the entire corpus?
 stop_words = get_stop_words('stop_words.txt')
-common_words = get_most_common_words(text_contents, stop_words)
+common_words = get_most_common_words(text_contents, stop_words).items()
+common_words = sorted(common_words, key=lambda x: x[1], reverse=True)
+
 print('\n### Most common words ###')
-for word, count in common_words:
+for word, count in common_words[:50]:
+    print(f"{word}: {count}")
+
+# Q3.extra. What are the 50 most common words in the entire corpus, where len(words) > 2?
+filtered_common_words = [(word, count) for word, count in common_words if len(word) > 2]
+print('\n### Most common words, len(words) > 2 ###')
+for word, count in filtered_common_words[:50]:
     print(f"{word}: {count}")
 
 # Q4. How many subdomains did you find in the ics.uci.edu domain?
 subdomains = get_subdomain_counts(urls)
 print('\n### ics.uci.edu subdomain count ###')
+total = 0
 for k, v in sorted(subdomains.items(), key=lambda x: x[0]):
-    print(f"{k}: {len(v)}")
+    count = len(v)
+    total += count
+    print(f"{k}: {count}")
+print("Total pages in ics.uci.edu:", total)
 
 # start_time = time.time()
 # end_time = time.time()
