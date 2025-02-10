@@ -164,7 +164,14 @@ def page_contains_large_files(htmlContent,url):
         return False
 
 
-
+def responseIsHtmlContent(htmlContent):
+    try:
+        soup = BeautifulSoup(htmlContent, 'html.parser')  
+        if soup.find(['html', 'head', 'body']):
+            return True
+        return False
+    except Exception as e:
+        return False
 
 #print('go go')
 # Open the file and read the JSON object
@@ -172,3 +179,5 @@ def page_contains_large_files(htmlContent,url):
     #data = json.load(file)
 #print("is duplicates "+ str(page_contains_dupliacte_paragraphs(data['content'])))
 #print("has large files: "+ str(page_contains_large_files(data['content'],data['url'])))
+
+#print(responseIsHtmlContent(data['content']))
