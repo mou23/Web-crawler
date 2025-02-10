@@ -2,3 +2,6 @@ cbor
 requests
 beautifulsoup4
 rocksdict
+numpy
+fuzzywuzzy
+python-Levenshtein

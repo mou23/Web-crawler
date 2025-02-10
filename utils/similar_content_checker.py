@@ -1,6 +1,5 @@
 import numpy as np
 import hashlib as hf
-from rocksdict import Rdict
 from collections import Counter
 
 def hash_to_binary(token,bit_size):
@@ -61,23 +60,3 @@ def get_simhash_similarity(fingerprint1, fingerprint2):
     # cosine_similarity = get_cosine_similarity(fingerprint1, fingerprint2)
     # print("cosine sim is"+ str(cosine_similarity))
     return similarity
-
-
-def similar_content_exist(url, new_content):
-    db = Rdict("./fingerprints")
-    new_finger_print = get_finger_print(new_content)
-    
-    found_similar_content = False
-    for current_url, current_fingerprint in db.items():
-        similarity = get_simhash_similarity(new_finger_print, current_fingerprint)
-        if similarity >= 0.99:
-            print(f"{url} matched with URL: {current_url}, {similarity}")
-            found_similar_content = True
-            break
-    
-    if found_similar_content == False:
-        db[url] = new_finger_print
-    
-    db.close()
-
-    return found_similar_content
